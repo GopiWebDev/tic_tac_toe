@@ -1,3 +1,13 @@
+const displayController = (() => {
+  const renderMessage = (message) => {
+    document.querySelector("#message").innerHTML = message;
+  };
+
+  return {
+    renderMessage,
+  };
+})();
+
 const Gameboard = (() => {
   let gameboard = ["", "", "", "", "", "", "", "", ""];
 
@@ -18,9 +28,12 @@ const Gameboard = (() => {
     render();
   };
 
+  const getGameboard = () => gameboard;
+
   return {
     render,
     update,
+    getGameboard,
   };
 })();
 
@@ -54,22 +67,76 @@ const Game = (() => {
   };
 
   const handleClick = (e) => {
+    if (gameOver) {
+      return;
+    }
     let index = e.target.id.split("-")[1];
+
+    if (Gameboard.getGameboard()[index] !== "") return;
 
     Gameboard.update(index, players[currenPlayerIndex].mark);
 
+    if (
+      checkForWin(Gameboard.getGameboard(), players[currenPlayerIndex].mark)
+    ) {
+      gameOver = true;
+      displayController.renderMessage(
+        `${players[currenPlayerIndex].name} wins`
+      );
+    } else if (checkForTie(Gameboard.getGameboard())) {
+      gameOver = true;
+      displayController.renderMessage(`It's a tie`);
+    }
     currenPlayerIndex = currenPlayerIndex === 0 ? 1 : 0;
+  };
+
+  const restart = () => {
+    for (let i = 0; i < 9; i++) {
+      Gameboard.update(i, "");
+    }
+    Gameboard.render();
+    gameOver = false;
+    document.querySelector("#message").innerHTML = "";
   };
 
   return {
     start,
+    restart,
     handleClick,
   };
 })();
+
+function checkForWin(board) {
+  const winningCombination = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6],
+  ];
+  for (let i = 0; i < winningCombination.length; i++) {
+    const [a, b, c] = winningCombination[i];
+    if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function checkForTie(board) {
+  return board.every((cell) => cell !== "");
+}
 
 const startBtn = document.querySelector("#start-button");
 const restartBtn = document.querySelector("#restart-button");
 
 startBtn.addEventListener("click", () => {
   Game.start();
+});
+
+restartBtn.addEventListener("click", () => {
+  Game.restart();
 });
