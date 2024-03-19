@@ -1,13 +1,3 @@
-const displayController = (() => {
-  const renderMessage = (message) => {
-    document.querySelector("#message").innerHTML = message;
-  };
-
-  return {
-    renderMessage,
-  };
-})();
-
 const Gameboard = (() => {
   let gameboard = ["", "", "", "", "", "", "", "", ""];
 
@@ -46,8 +36,8 @@ const createPlayer = (name, mark) => {
 
 const Game = (() => {
   let players = [];
-  let currenPlayerIndex;
-  let gameOver;
+  let currentPlayerIndex;
+  let GameOver;
 
   const start = () => {
     players = [
@@ -55,9 +45,8 @@ const Game = (() => {
       createPlayer(document.querySelector("#player2").value, "O"),
     ];
 
-    currenPlayerIndex = 0;
-    gameOver = false;
-
+    currentPlayerIndex = 0;
+    GameOver = false;
     Gameboard.render();
 
     const squares = document.querySelectorAll(".square");
@@ -66,37 +55,43 @@ const Game = (() => {
     });
   };
 
-  const handleClick = (e) => {
-    if (gameOver) {
-      return;
-    }
-    let index = e.target.id.split("-")[1];
-
-    if (Gameboard.getGameboard()[index] !== "") return;
-
-    Gameboard.update(index, players[currenPlayerIndex].mark);
-
-    if (
-      checkForWin(Gameboard.getGameboard(), players[currenPlayerIndex].mark)
-    ) {
-      gameOver = true;
-      displayController.renderMessage(
-        `${players[currenPlayerIndex].name} wins`
-      );
-    } else if (checkForTie(Gameboard.getGameboard())) {
-      gameOver = true;
-      displayController.renderMessage(`It's a tie`);
-    }
-    currenPlayerIndex = currenPlayerIndex === 0 ? 1 : 0;
-  };
-
   const restart = () => {
     for (let i = 0; i < 9; i++) {
       Gameboard.update(i, "");
     }
-    Gameboard.render();
-    gameOver = false;
     document.querySelector("#message").innerHTML = "";
+    Gameboard.render();
+  };
+
+  const handleClick = (e) => {
+    if (GameOver) {
+      return;
+    }
+    const index = parseInt(e.target.id.split("-")[1]);
+    if (Gameboard.getGameboard()[index] !== "") return;
+
+    Gameboard.update(index, players[currentPlayerIndex].mark);
+
+    if (
+      checkForWin(Gameboard.getGameboard(), players[currentPlayerIndex].mark)
+    ) {
+      GameOver = true;
+      if (players[currentPlayerIndex].name === "") {
+        document.querySelector(
+          "#message"
+        ).innerHTML = `Player Won, Press Restart`;
+      } else {
+        document.querySelector(
+          "#message"
+        ).innerHTML = `${players[currentPlayerIndex].name} Won, Press Restart`;
+      }
+    } else if (checkForTie(Gameboard.getGameboard())) {
+      GameOver = true;
+      document.querySelector(
+        "#message"
+      ).innerHTML = `It's a tie, Press Restart`;
+    }
+    currentPlayerIndex = currentPlayerIndex === 0 ? 1 : 0;
   };
 
   return {
@@ -106,19 +101,30 @@ const Game = (() => {
   };
 })();
 
+const startBtn = document.querySelector("#start");
+startBtn.addEventListener("click", () => {
+  Game.start();
+});
+
+const restartBtn = document.querySelector("#restart");
+restartBtn.addEventListener("click", () => {
+  Game.restart();
+});
+
 function checkForWin(board) {
-  const winningCombination = [
+  const winningCombinations = [
     [0, 1, 2],
     [3, 4, 5],
     [6, 7, 8],
     [0, 3, 6],
     [1, 4, 7],
-    [2, 5, 8],
+    [2, 4, 8],
     [0, 4, 8],
     [2, 4, 6],
   ];
-  for (let i = 0; i < winningCombination.length; i++) {
-    const [a, b, c] = winningCombination[i];
+
+  for (let i = 0; i < winningCombinations.length; i++) {
+    const [a, b, c] = winningCombinations[i];
     if (board[a] && board[a] === board[b] && board[a] === board[c]) {
       return true;
     }
@@ -129,14 +135,3 @@ function checkForWin(board) {
 function checkForTie(board) {
   return board.every((cell) => cell !== "");
 }
-
-const startBtn = document.querySelector("#start-button");
-const restartBtn = document.querySelector("#restart-button");
-
-startBtn.addEventListener("click", () => {
-  Game.start();
-});
-
-restartBtn.addEventListener("click", () => {
-  Game.restart();
-});
