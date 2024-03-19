@@ -60,6 +60,7 @@ const Game = (() => {
       Gameboard.update(i, "");
     }
     document.querySelector("#message").innerHTML = "";
+    GameOver = false;
     Gameboard.render();
   };
 
